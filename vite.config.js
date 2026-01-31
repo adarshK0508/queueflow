@@ -13,5 +13,5 @@ export default defineConfig({
     }),
     tailwindcss(),
   ],
-  base: "/queueflow"
+  // base: "/queueflow"
 })

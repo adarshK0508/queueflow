@@ -28,7 +28,7 @@ const Home = () => {
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto px-4">
           
           {/* User Card Link - Pointing to /user */}
-          <Link to="/queueflow/user" className="group">
+          <Link to="/user" className="group">
             <div className="bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border-b-8 border-blue-600 hover:-translate-y-3 transition-all duration-300 text-left h-full flex flex-col justify-between">
               <div>
                 <div className="bg-blue-100 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:rotate-6 transition-transform">
@@ -48,7 +48,7 @@ const Home = () => {
           </Link>
 
           {/* Admin Card Link - Pointing to /admin-login */}
-          <Link to="/queueflow/admin-login" className="group">
+          <Link to="/admin-login" className="group">
             <div className="bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border-b-8 border-purple-600 hover:-translate-y-3 transition-all duration-300 text-left h-full flex flex-col justify-between">
               <div>
                 <div className="bg-purple-100 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:-rotate-6 transition-transform">

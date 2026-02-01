@@ -98,23 +98,40 @@ const UserPage = () => {
   };
 
   // --- SCANNER ---
-  useEffect(() => {
-    if (!queueId && !serviceFinished) {
-      const scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
-      scanner.render(async (decodedText) => {
-        try {
-          const url = new URL(decodedText);
-          const id = url.searchParams.get("id");
-          if (id) {
-            scanner.clear();
-            setQueueId(id);
-            setIsEnteringName(true);
-          }
-        } catch (err) { console.error(err); }
-      });
-      return () => { try { scanner.clear(); } catch (e) { } };
-    }
-  }, [queueId, serviceFinished]);
+  // --- SCANNER ---
+useEffect(() => {
+  // Only initialize if we don't have a queueId and aren't finished
+  if (!queueId && !serviceFinished) {
+    const scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+
+    scanner.render(async (decodedText) => {
+      try {
+        const url = new URL(decodedText);
+        const id = url.searchParams.get("id");
+        if (id) {
+          // 1. Clear the scanner FIRST while the #reader div still exists
+          await scanner.clear(); 
+          
+          // 2. Then update state, which will hide the #reader div
+          setQueueId(id);
+          setIsEnteringName(true);
+        }
+      } catch (err) {
+        console.error("Scan error:", err);
+      }
+    });
+
+    return () => {
+      // Use a check to see if the element still exists before clearing
+      const readerElem = document.getElementById("reader");
+      if (readerElem) {
+        scanner.clear().catch(error => {
+          console.error("Failed to clear scanner during unmount:", error);
+        });
+      }
+    };
+  }
+}, [queueId, serviceFinished]);
 
   const joinQueue = async (e) => {
     e.preventDefault();

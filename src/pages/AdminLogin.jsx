@@ -3,7 +3,7 @@ import { auth } from '../firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { useNavigate, Link } from 'react-router-dom';
 import { ShieldCheck, Lock, Mail, ArrowRight, Loader2, Sparkles, UserPlus, Sun, Moon } from 'lucide-react';
-import { useTheme } from '../ThemeContext'; // Import Hook
+import { useTheme } from '../ThemeContext';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
@@ -11,7 +11,7 @@ const AdminLogin = () => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { isDarkMode, toggleTheme } = useTheme(); // Use Global State
+  const { isDarkMode, toggleTheme } = useTheme(); 
   const navigate = useNavigate();
 
   const handleAuth = async (e) => {

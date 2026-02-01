@@ -5,7 +5,7 @@ import { signOut, onAuthStateChanged } from 'firebase/auth';
 import { useNavigate, Link } from 'react-router-dom';
 import { collection, addDoc, query, where, onSnapshot, orderBy, doc, updateDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
 import { LayoutDashboard, Plus, Trash2, LogOut, CheckCircle2, ExternalLink, Loader2, Play, Users, Command, Sun, Moon } from 'lucide-react';
-import { useTheme } from '../ThemeContext'; // Import Hook
+import { useTheme } from '../ThemeContext';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -15,7 +15,7 @@ const AdminDashboard = () => {
   const [newQueueData, setNewQueueData] = useState({ name: '', category: '' });
   const [authLoading, setAuthLoading] = useState(true);
   const [loading, setLoading] = useState(false);
-  const { isDarkMode, toggleTheme } = useTheme(); // Use Global State
+  const { isDarkMode, toggleTheme } = useTheme(); 
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -25,7 +25,6 @@ const AdminDashboard = () => {
     return () => unsubscribe();
   }, [navigate]);
 
-  // ... (Keep existing loading Logic) ...
   useEffect(() => {
     if (authLoading || !auth.currentUser) return;
     const q = query(collection(db, "queues"), where("adminId", "==", auth.currentUser.uid), orderBy("createdAt", "desc"));
@@ -44,7 +43,6 @@ const AdminDashboard = () => {
     return () => unsubscribe();
   }, [activeQueue]);
 
-  // ... (Keep CRUD Logic - createSession, deleteSession, callCustomer, removeCustomer) ...
   const createSession = async (e) => {
     e.preventDefault(); if (!newQueueData.name) return; setLoading(true);
     try { await addDoc(collection(db, "queues"), { adminId: auth.currentUser.uid, name: newQueueData.name, category: newQueueData.category || "General", createdAt: serverTimestamp(), active: true }); setNewQueueData({ name: '', category: '' }); } catch (err) { console.error(err); } setLoading(false);
@@ -82,7 +80,7 @@ const AdminDashboard = () => {
         </div>
 
         <div className={`p-6 border-b ${isDarkMode ? 'border-white/5' : 'border-slate-100'}`}>
-          <div className="flex items-center gap-2 mb-4 text-[10px] font-mono text-purple-400 uppercase tracking-widest"><Plus size={12} /> Initialize_Stream</div>
+          <div className="flex items-center gap-2 mb-4 text-[10px] font-mono text-purple-400 uppercase tracking-widest"><Plus size={12} /> ADD SESSION</div>
           <form onSubmit={createSession} className="space-y-3">
             <input className={`w-full rounded-xl px-4 py-3 outline-none focus:border-purple-500/50 transition-all text-xs font-medium ${isDarkMode ? 'bg-white/5 border border-white/5 text-white placeholder:text-slate-600' : 'bg-slate-50 border border-slate-200 text-slate-800 placeholder:text-slate-400'}`} placeholder="Queue Name" value={newQueueData.name} onChange={(e) => setNewQueueData({ ...newQueueData, name: e.target.value })} required />
             <input className={`w-full rounded-xl px-4 py-3 outline-none focus:border-purple-500/50 transition-all text-xs font-medium ${isDarkMode ? 'bg-white/5 border border-white/5 text-white placeholder:text-slate-600' : 'bg-slate-50 border border-slate-200 text-slate-800 placeholder:text-slate-400'}`} placeholder="Category" value={newQueueData.category} onChange={(e) => setNewQueueData({ ...newQueueData, category: e.target.value })} />

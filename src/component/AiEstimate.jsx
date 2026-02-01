@@ -1,4 +1,4 @@
-// src/components/AiEstimate.jsx
+
 import React, { useState, useEffect } from 'react';
 import { getSmartPrediction } from '../services/aiPredictor';
 

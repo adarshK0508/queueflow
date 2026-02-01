@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { db } from '../firebase';
-import AiEstimate from '../component/AiEstimate'; 
+import AiEstimate from '../component/AiEstimate';
 import { collection, serverTimestamp, doc, onSnapshot, addDoc, getDocs, deleteDoc, query, orderBy, limit } from 'firebase/firestore';
 import { User, QrCode, LogOut, CheckCircle2, Users, Loader2, Sparkles, ArrowRight, Sun, Moon } from 'lucide-react';
-import { useTheme } from '../ThemeContext'; // Import Hook
+import { useTheme } from '../ThemeContext';
 
 const UserPage = () => {
-  // ... (Same state/logic vars)
   const [queueId, setQueueId] = useState(localStorage.getItem('savedQueueId'));
   const [myDocId, setMyDocId] = useState(localStorage.getItem('savedDocId'));
   const [userName, setUserName] = useState("");
@@ -18,23 +17,38 @@ const UserPage = () => {
   const [serviceFinished, setServiceFinished] = useState(false);
   const [history, setHistory] = useState([]);
   const [myPosition, setMyPosition] = useState(0);
-  
-  const { isDarkMode, toggleTheme } = useTheme(); // Use Global State
 
-  // ... (Paste your AI/Alert/Sync Logic here - same as before) ...
+  const { isDarkMode, toggleTheme } = useTheme();
+  const prevStatusRef = useRef(null);
+  const audioRef = useRef(new Audio('/notification.mp3'));
+
   useEffect(() => { if (!queueId) return; const historyQuery = query(collection(db, "queues", queueId, "history"), orderBy("completedAt", "desc"), limit(5)); const unsubscribe = onSnapshot(historyQuery, (snapshot) => { setHistory(snapshot.docs.map(doc => doc.data())); }); return () => unsubscribe(); }, [queueId]);
   useEffect(() => { if (queueId && myDocId) { const waitlistRef = collection(db, "queues", queueId, "waitlist"); const unsubscribe = onSnapshot(waitlistRef, (snapshot) => { const allDocs = snapshot.docs.map(d => ({ id: d.id, ...d.data() })); const me = allDocs.find(d => d.id === myDocId); if (!me) { setUserData(null); setServiceFinished(true); localStorage.removeItem('savedQueueId'); localStorage.removeItem('savedDocId'); } else { setUserData(me); const ahead = allDocs.filter(d => d.status === 'waiting' && d.tokenNumber < me.tokenNumber); setPeopleAhead(ahead.length); setMyPosition(ahead.length + 1); } }); return () => unsubscribe(); } }, [queueId, myDocId]);
   const joinQueue = async (e) => { e.preventDefault(); setLoading(true); try { const waitlistRef = collection(db, "queues", queueId, "waitlist"); const snapshot = await getDocs(waitlistRef); const docRef = await addDoc(waitlistRef, { name: userName, tokenNumber: snapshot.size + 1, status: "waiting", joinedAt: serverTimestamp() }); localStorage.setItem('savedQueueId', queueId); localStorage.setItem('savedDocId', docRef.id); setMyDocId(docRef.id); setIsEnteringName(false); } catch (error) { alert("Error joining."); } setLoading(false); };
   const leaveQueue = async () => { if (window.confirm("Leave?")) { setLoading(true); await deleteDoc(doc(db, "queues", queueId, "waitlist", myDocId)); localStorage.clear(); window.location.reload(); } };
   const reset = () => { localStorage.clear(); window.location.reload(); };
-  useEffect(() => { if (!queueId && !serviceFinished) { const scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 }); scanner.render(async (decodedText) => { try { const url = new URL(decodedText); const id = url.searchParams.get("id"); if (id) { await scanner.clear(); setQueueId(id); setIsEnteringName(true); } } catch (err) { console.error(err); } }); return () => { const el = document.getElementById("reader"); if(el) scanner.clear().catch(console.error); }; } }, [queueId, serviceFinished]);
-
+  useEffect(() => { if (!queueId && !serviceFinished) { const scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 }); scanner.render(async (decodedText) => { try { const url = new URL(decodedText); const id = url.searchParams.get("id"); if (id) { await scanner.clear(); setQueueId(id); setIsEnteringName(true); } } catch (err) { console.error(err); } }); return () => { const el = document.getElementById("reader"); if (el) scanner.clear().catch(console.error); }; } }, [queueId, serviceFinished]);
+  useEffect(() => {
+    if (userData && userData.status === 'called') {
+      if (prevStatusRef.current === 'waiting') {
+        audioRef.current.play().catch(err => {
+          console.error("Audio playback failed (User interaction might be required):", err);
+        });
+        if ("vibrate" in navigator) {
+          navigator.vibrate([200, 100, 200]);
+        }
+      }
+    }
+    if (userData) {
+      prevStatusRef.current = userData.status;
+    }
+  }, [userData]);
   if (loading) return <div className={`min-h-screen flex flex-col items-center justify-center ${isDarkMode ? 'bg-[#030712]' : 'bg-slate-50'}`}><Loader2 className="animate-spin text-blue-500 mb-4" size={48} /></div>;
 
   return (
     <div className={`min-h-screen transition-colors duration-500 overflow-hidden relative p-6 flex flex-col items-center justify-center
       ${isDarkMode ? 'bg-[#030712] text-slate-200' : 'bg-slate-50 text-slate-900'}`}>
-      
+
       <button onClick={toggleTheme} className={`absolute top-6 right-6 p-3 rounded-full shadow-lg z-50 ${isDarkMode ? 'bg-white/10 text-yellow-400' : 'bg-white text-slate-700 border border-slate-200'}`}>
         {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
       </button>
@@ -74,10 +88,10 @@ const UserPage = () => {
       {userData && (
         <div className="w-full max-w-md animate-in fade-in zoom-in duration-500">
           <div className={`relative overflow-hidden rounded-[3rem] border transition-all duration-700 
-            ${userData.status === 'called' 
-              ? 'bg-gradient-to-br from-emerald-600 to-teal-700 shadow-2xl border-transparent' 
+            ${userData.status === 'called'
+              ? 'bg-gradient-to-br from-emerald-600 to-teal-700 shadow-2xl border-transparent'
               : (isDarkMode ? 'bg-slate-900/80 border-white/10 backdrop-blur-2xl' : 'bg-white border-white shadow-2xl')}`}>
-            
+
             <div className={`p-6 text-center border-b ${userData.status === 'called' ? 'bg-black/20 border-white/10' : (isDarkMode ? 'bg-blue-600/10 border-white/5' : 'bg-slate-50 border-slate-100')}`}>
               <div className="flex items-center justify-center gap-2">
                 <Sparkles className={userData.status === 'called' ? 'text-white' : 'text-blue-500'} size={16} />
@@ -114,8 +128,8 @@ const UserPage = () => {
       {/* 4. FINISHED */}
       {serviceFinished && (
         <div className="w-full max-w-md relative animate-in slide-in-from-bottom-8 duration-700">
-           <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-[3rem] blur opacity-20"></div>
-           <div className={`relative p-12 rounded-[3rem] border text-center backdrop-blur-xl ${isDarkMode ? 'bg-slate-900/90 border-white/10' : 'bg-white/90 border-white shadow-xl'}`}>
+          <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-[3rem] blur opacity-20"></div>
+          <div className={`relative p-12 rounded-[3rem] border text-center backdrop-blur-xl ${isDarkMode ? 'bg-slate-900/90 border-white/10' : 'bg-white/90 border-white shadow-xl'}`}>
             <div className="text-6xl mb-6">✨</div>
             <h2 className={`text-3xl font-black mb-2 tracking-tighter ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Session Complete</h2>
             <button onClick={reset} className="w-full bg-blue-600 text-white p-5 rounded-2xl font-black text-lg hover:scale-[1.02] transition-all">Finish & Exit</button>

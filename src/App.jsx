@@ -21,19 +21,14 @@ function App() {
   return (
     <Router>
       <div className="App">
-        {/* Routes act like a switch: it renders only the first one that matches the URL */}
         <Routes>
-          {/* Public Home Page */}
           <Route path="/" element={<Home />} />
 
-          {/* User Side (No login required) */}
           <Route path="/user" element={<UserPage />} />
 
-          {/* Admin Side */}
           <Route path="/admin-login" element={<AdminLogin />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
 
-          {/* Catch-all route (404) */}
           <Route path="*" element={<div className="p-10 text-center">404 - Page Not Found</div>} />
         </Routes>
       </div>

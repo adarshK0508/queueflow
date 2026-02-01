@@ -1,10 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Users, ShieldCheck, ArrowRight, Sun, Moon } from 'lucide-react';
-import { useTheme } from '../ThemeContext'; // Import the hook
+import { useTheme } from '../ThemeContext'; 
 
 const Home = () => {
-  const { isDarkMode, toggleTheme } = useTheme(); // Use Global State
+  const { isDarkMode, toggleTheme } = useTheme(); 
 
   return (
     <div className={`min-h-screen transition-colors duration-500 overflow-hidden relative selection:bg-blue-500/30
